@@ -1,1 +1,1 @@
-# ML_handbook
+# Image segmentation with k-means
