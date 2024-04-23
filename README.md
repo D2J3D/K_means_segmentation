@@ -1,1 +1,1 @@
-# Image segmentation with k-means
+# Кластеризация изображений на основе метода k-means
