@@ -44,9 +44,6 @@ public:
 
     void setCluster(int clusterID) { this->clusterID = clusterID; }
 
-    double calc_distance(Pixel p1, Pixel p2){
-        return std::sqrt( std::pow(p1.getVal(0) - p2.getVal(0), 2) + std::pow(p1.getVal(1) - p2.getVal(1), 2) +std::pow(p1.getVal(2) - p2.getVal(2), 2) );
-    }
 };
 
 class Cluster
@@ -127,7 +124,7 @@ void Kmeans::clearClusters(){
 
 int Kmeans::getNearestClusterId(Pixel pixel)
 {
-    // for each cluster form 0 to K-1 count Euclidean norm and choose the nearest cluster
+    
     double min_dist = DBL_MAX;
     int nearestCLusterID = 0;
     for (int i = 0; i < K; i++){
