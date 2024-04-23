@@ -19,14 +19,12 @@ private:
     int id;
     int clusterID;
     std::vector<double> lab;
-    // cv::Vec3b Lab;
 
 public:
     Pixel(){}
     Pixel(int id, cv::Vec3b Lab){
         this->id = id;
         this->clusterID = 0;
-        // this->Lab = Lab;
         for (int i = 0; i < 3; i++){
             lab.push_back(Lab[i] * 1.0/ 255.0);
         }
@@ -43,7 +41,6 @@ public:
     }
 
     void setCluster(int clusterID) { this->clusterID = clusterID; }
-
 };
 
 class Cluster
@@ -93,11 +90,10 @@ public:
     }
 };
 
-
 class Kmeans
 {
 private:
-    int K, iters, total_points;
+    int K, iters, total_points; // amount of clusters, maximum iterations, amount of pixels in the img
     std::vector<Cluster> clusters;
 
     void clearClusters();
@@ -107,7 +103,7 @@ private:
 public:
     Kmeans(int K, int iters, int total_points);
 
-    std::vector<int> run(std::vector<Pixel> &all_pixels);
+    std::vector<int> fit(std::vector<Pixel> &all_pixels);
 };
 
 Kmeans::Kmeans(int K, int iters, int total_points){
@@ -124,7 +120,7 @@ void Kmeans::clearClusters(){
 
 int Kmeans::getNearestClusterId(Pixel pixel)
 {
-    
+    // for each centroid measure euclidean distance(pixel, centroid) and return the nearest centroid 
     double min_dist = DBL_MAX;
     int nearestCLusterID = 0;
     for (int i = 0; i < K; i++){
@@ -140,8 +136,7 @@ int Kmeans::getNearestClusterId(Pixel pixel)
     return nearestCLusterID;
 }
 
-
-std::vector<int> Kmeans::run(std::vector<Pixel> &all_pixels){
+std::vector<int> Kmeans::fit(std::vector<Pixel> &all_pixels){
     std::vector<int> labels;
 
     std::vector<int> used_pointIds;
@@ -156,8 +151,6 @@ std::vector<int> Kmeans::run(std::vector<Pixel> &all_pixels){
                 used_pointIds.end())
             {
                 used_pointIds.push_back(index);
-                
-                std::cout<<index << " " << all_pixels.size()<< " - log \n";
                 all_pixels[index].setCluster(i);
                 Cluster cluster(i, all_pixels[index]);
                 clusters.push_back(cluster);
@@ -165,14 +158,14 @@ std::vector<int> Kmeans::run(std::vector<Pixel> &all_pixels){
             }
         }
     }
-    std::cout << "Clusters initialized = " << clusters.size() << std::endl
+    std::cout << "Clusters initialized, K = " << clusters.size() << std::endl
               << std::endl;
 
-    std::cout << "Running K-Means Clustering.." << std::endl;
+    std::cout << "Starting clasterization..." << std::endl;
     int iter = 1;
     while (true)
     {
-        std::cout << "Iter - " << iter << "/" << iters << std::endl;
+        std::cout << "Iteration - " << iter << "/" << iters << std::endl;
         bool done = true;
 
 // Add all points to their nearest cluster
@@ -237,12 +230,8 @@ std::vector<int> Kmeans::run(std::vector<Pixel> &all_pixels){
    
 }
 
-int main(){
 
-    std::string ORIGINAL_DIR = "/home/den/CV_labs/Lab4/img/original/";
-    std::string RES_DIR = "/home/den/CV_labs/Lab4/img/outputs/segmentation3/";
-    cv::Mat img = cv::imread(ORIGINAL_DIR + "5.jpg");
-    
+std::vector<Pixel> prepareImg(cv::Mat img){
     cv::Mat img_Lab;
     cv::cvtColor(img, img_Lab, cv::COLOR_BGR2Lab);
     std::vector<Pixel> imgData;
@@ -254,9 +243,22 @@ int main(){
             imgData.push_back(pixel);
         }
     }
-    std::cout << img_Lab.at<cv::Vec3b>(0, 0) << "LOG \n";
-    Kmeans model{3, 100, img.cols * img.rows};
-    std::vector<int> labels = model.run(imgData);
+
+    return imgData;
+}
+
+int main(){
+
+    std::string ORIGINAL_DIR = "/home/den/CV_labs/Lab4/img/original/";
+    std::string RES_DIR = "/home/den/CV_labs/Lab4/img/outputs/segmentation3/";
+    cv::Mat img = cv::imread(ORIGINAL_DIR + "flower.jpeg");
+
+    std::vector<Pixel> imgData = prepareImg(img);
+    int K = 4, iters = 100, pixels_amount = img.rows * img.cols;
+
+    
+    Kmeans model{K, iters, pixels_amount};
+    std::vector<int> labels = model.fit(imgData);
     
     int height = img.rows;
     int width = img.cols;
@@ -289,7 +291,7 @@ int main(){
         }
     }
 
-    cv::imwrite(RES_DIR + "clustered_img_5.jpeg", outputImage);
+    cv::imwrite(RES_DIR + "flower_4_segments.jpeg", outputImage);
 
     return 0;
 }
