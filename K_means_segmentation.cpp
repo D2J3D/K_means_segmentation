@@ -1,9 +1,6 @@
 #include <ctime>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 #include <vector>
-#include <omp.h>
 #include <algorithm>
 #include <cmath>
 
@@ -18,14 +15,13 @@ class Pixel
 private:
     int id;
     int clusterID;
-    std::vector<double> lab; // vector with values from Vec3b of a pixel in image of CIE LAB color space
+    std::vector<double> lab;
 
 public:
     Pixel(){}
     Pixel(int id, cv::Vec3b Lab){
         this->id = id;
         this->clusterID = 0;
-        // converting Vec3b to vector of doubles in range [0,1]
         for (int i = 0; i < 3; i++){
             lab.push_back(Lab[i] * 1.0/ 255.0);
         }
@@ -48,8 +44,8 @@ class Cluster
 {
 private:
     int clusterID;
-    Pixel centroid; // the current centroid of a cluster
-    std::vector<Pixel> pixels; // pixels that belong to the cluster with clusterID
+    Pixel centroid;
+    std::vector<Pixel> pixels;
 
 public:
     Cluster(int clusterID, Pixel centroid){
@@ -121,7 +117,7 @@ void Kmeans::clearClusters(){
 
 int Kmeans::getNearestClusterId(Pixel pixel)
 {
-    // for each centroid measure euclidean distance from pixel to centroid and return the nearest centroid's id 
+    // for each centroid measure euclidean distance(pixel, centroid) and return the nearest centroid 
     double min_dist = DBL_MAX;
     int nearestCLusterID = 0;
     for (int i = 0; i < K; i++){
@@ -138,15 +134,15 @@ int Kmeans::getNearestClusterId(Pixel pixel)
 }
 
 std::vector<int> Kmeans::fit(std::vector<Pixel> &all_pixels){
-    std::vector<int> labels; // final labels of the pixels
-    std::vector<int> used_pointIds; // initializing centroids
+    std::vector<int> labels;
+    // initializing clusters as random pixels of the image
+    std::vector<int> used_pointIds; // vector with indexes of pixels that were assigned as clusters
     for (int i = 1; i <= K; i++)
     {
         while (true)
         {
-            
-            int index = std::rand() % this->total_points; // chosing random points to be a centroid for initialization
-
+            int index = std::rand() % this->total_points; //random index from 0 to total_points-1
+            // if index is not in used_pointIds - it is a new cluster
             if (std::find(used_pointIds.begin(), used_pointIds.end(), index) ==
                 used_pointIds.end())
             {
@@ -232,7 +228,8 @@ std::vector<int> Kmeans::fit(std::vector<Pixel> &all_pixels){
 
 
 std::vector<Pixel> prepareImg(cv::Mat img){
-    // form a vector of Pixels to pass to Kmeans algorithm
+    // converting img to CIE LAB color space
+    // and flattening to a vector of Pixel objects
     cv::Mat img_Lab;
     cv::cvtColor(img, img_Lab, cv::COLOR_BGR2Lab);
     std::vector<Pixel> imgData;
@@ -256,6 +253,7 @@ int main(){
 
     std::vector<Pixel> imgData = prepareImg(img);
     int K = 4, iters = 100, pixels_amount = img.rows * img.cols;
+
     
     Kmeans model{K, iters, pixels_amount};
     std::vector<int> labels = model.fit(imgData);
