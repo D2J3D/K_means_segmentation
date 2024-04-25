@@ -228,8 +228,10 @@ std::vector<int> Kmeans::fit(std::vector<Pixel> &all_pixels){
 
 
 std::vector<Pixel> prepareImg(cv::Mat img){
-    // converting img to CIE LAB color space
+    /// bluring img,
+    // converting img to CIE LAB (or HSV) color space
     // and flattening to a vector of Pixel objects
+    cv::medianBlur(img, img, 5);
     cv::Mat img_Lab;
     cv::cvtColor(img, img_Lab, cv::COLOR_BGR2Lab);
     std::vector<Pixel> imgData;
